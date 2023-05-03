@@ -1,0 +1,6 @@
+
+rdkit
+streamlit
+altair
+matplotlib
+ipykernel
