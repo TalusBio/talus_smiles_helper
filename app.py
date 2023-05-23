@@ -38,7 +38,7 @@ for i, (img, smi, csmi) in enumerate(zip(imgs, smiles, canon_smiles)):
         st.image(img, width=600)
 
 match_positions = [None for _ in range(len(canon_smiles))]
-for x in canon_smiles:
+for i, x in enumerate(canon_smiles):
     try:
         match_positions[i] = canon_query_smiles.index(x)
     except ValueError:
