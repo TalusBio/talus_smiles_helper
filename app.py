@@ -16,7 +16,9 @@ with st.sidebar:
     lookup_text = st.text_area("Enter Query SMILES here", height=100, key="query_smiles", value=default_smiles)
 
     smiles = [x.strip() for x in text.split("\n")]
+    smiles = [x for x in smiles if x]
     query_smiles = [x.strip() for x in lookup_text.split("\n")]
+    query_smiles = [x for x in query_smiles if x]
 
     canon_smiles = [Chem.CanonSmiles(smile) for smile in smiles if smile]
     canon_query_smiles = [Chem.CanonSmiles(smile) for smile in query_smiles if smile]
@@ -35,12 +37,12 @@ for i, (img, smi, csmi) in enumerate(zip(imgs, smiles, canon_smiles)):
         st.markdown(f"```\n{caption}\n```")
         st.image(img, width=600)
 
-match_positions = []
+match_positions = [None for _ in range(len(canon_smiles))]
 for x in canon_smiles:
     try:
-        match_positions.append(canon_query_smiles.index(x))
+        match_positions[i] = canon_query_smiles.index(x)
     except ValueError:
-        match_positions.append(None)
+        match_positions[i] = None
 
 
 df = pd.DataFrame({
