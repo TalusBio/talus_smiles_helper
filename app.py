@@ -45,14 +45,25 @@ for i, x in enumerate(canon_smiles):
         match_positions[i] = None
 
 
+
+
+
+target_fps = [FingerprintMols.FingerprintMol(x) for x in mols]
+query_fps = [FingerprintMols.FingerprintMol(x) for x in query_mols]
+
+similarity_matrix = [[DataStructs.FingerprintSimilarity(x,y) for x in query_fps] for y in target_fps]
+closest_match = [np.argmax(x) for x in similarity_matrix]
+
 df = pd.DataFrame({
     'Input SMILES': smiles,
+    'Closest match': [query_smiles[i] for i in closest_match],
     'Canonical SMILES': canon_smiles,
     'is cannonical': [x == y for x, y in zip(smiles, canon_smiles)],
     'query position': match_positions,
+    'closest query position': closest_match,
+    'similarity': [x[i] for x, i in zip(similarity_matrix, closest_match)]
 })
-
-st.dataframe(df)
+st.dataframe(df, use_container_width=True)
 # add a button to download the dataframe as a csv
 st.download_button(
     label="Download data as CSV (you can open it in excel)",
@@ -63,11 +74,7 @@ st.download_button(
 
 st.markdown("# Similarity Matrix")
 
-target_fps = [FingerprintMols.FingerprintMol(x) for x in mols]
-query_fps = [FingerprintMols.FingerprintMol(x) for x in query_mols]
-
-similarity_matrix = [[DataStructs.FingerprintSimilarity(x,y) for x in target_fps] for y in query_fps]
-x, y = np.meshgrid(range(1, len(target_fps) + 1), range(1, len(query_fps) + 1))
+x, y = np.meshgrid(range(1, len(query_fps) + 1), range(1, len(target_fps) + 1))
 sim_array = np.array(similarity_matrix)
 chart_df = pd.DataFrame({'target': x.ravel(), 'query': y.ravel(), 'similarity': sim_array.ravel()})
 chart = alt.Chart(chart_df).mark_rect().encode(
