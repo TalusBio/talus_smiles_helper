@@ -64,7 +64,7 @@ st.markdown("# Results Table")
 df = pd.DataFrame(
     {
         "Input SMILES": smiles,
-        "MW": mws,
+        "ExactMolWt": mws,
         "Closest match": [query_smiles[i] for i in closest_match],
         "Canonical SMILES": canon_smiles,
         "is cannonical": [x == y for x, y in zip(smiles, canon_smiles)],
