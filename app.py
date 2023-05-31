@@ -9,6 +9,27 @@ from rdkit.Chem.Fingerprints import FingerprintMols
 from rdkit import DataStructs
 import altair as alt
 
+
+def neutralize_atoms(mol):
+    """Neutralizing charges in the molecule
+
+    Author: Noel O’Boyle (Vincent Scalfani adapted code for RDKit)
+    from: https://www.rdkit.org/docs/Cookbook.html
+    """
+    pattern = Chem.MolFromSmarts("[+1!h0!$([*]~[-1,-2,-3,-4]),-1!$([*]~[+1,+2,+3,+4])]")
+    at_matches = mol.GetSubstructMatches(pattern)
+    at_matches_list = [y[0] for y in at_matches]
+    if len(at_matches_list) > 0:
+        for at_idx in at_matches_list:
+            atom = mol.GetAtomWithIdx(at_idx)
+            chg = atom.GetFormalCharge()
+            hcount = atom.GetTotalNumHs()
+            atom.SetFormalCharge(0)
+            atom.SetNumExplicitHs(hcount - chg)
+            atom.UpdatePropertyCache()
+    return mol
+
+
 with st.sidebar:
     default_smiles = "\n".join(
         ["CN2C(=O)N(C)C(=O)C1=C2N=CN1C", "CN1C=NC2=C1C(=O)N(C)C(=O)N2C"]
@@ -29,15 +50,25 @@ with st.sidebar:
     canon_query_smiles = [Chem.CanonSmiles(smile) for smile in query_smiles if smile]
 
 mols = [Chem.MolFromSmiles(smile) for smile in canon_smiles]
+decharged_mols = [neutralize_atoms(mol) for mol in mols]
+decharged_smiles = [Chem.CanonSmiles(Chem.MolToSmiles(mol)) for mol in decharged_mols]
 query_mols = [Chem.MolFromSmiles(smile) for smile in canon_query_smiles]
 imgs = [Draw.MolToImage(mol, size=(600, 400)) for mol in mols]
 
 st.markdown("# Input SMILES (and structures)")
-for i, (img, smi, csmi) in enumerate(zip(imgs, smiles, canon_smiles)):
+for i, (img, smi, csmi, dsmi) in enumerate(
+    zip(imgs, smiles, canon_smiles, decharged_smiles)
+):
     if smi != csmi:
         caption = f"Original: {smi}\n\nCanonical: {csmi}"
     else:
         caption = smi
+
+    if "." in smi:
+        st.warning("This is a mixture or contains adducts!!!!")
+    if smi != dsmi:
+        st.warning("This molecule was Charged!!!!")
+        caption += f"\n\nDecharged: {dsmi}"
 
     with st.expander(f"{i+1}: {smi}"):
         st.markdown(f"```\n{caption}\n```")
