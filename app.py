@@ -50,7 +50,10 @@ with st.sidebar:
     canon_query_smiles = [Chem.CanonSmiles(smile) for smile in query_smiles if smile]
 
 mols = [Chem.MolFromSmiles(smile) for smile in canon_smiles]
-decharged_mols = [neutralize_atoms(mol) for mol in mols]
+
+# Here I am generating a new molecule because the neutralization modifies
+# the molecule in place
+decharged_mols = [neutralize_atoms(Chem.MolFromSmiles(smile)) for smile in smiles]
 decharged_smiles = [Chem.CanonSmiles(Chem.MolToSmiles(mol)) for mol in decharged_mols]
 query_mols = [Chem.MolFromSmiles(smile) for smile in canon_query_smiles]
 imgs = [Draw.MolToImage(mol, size=(600, 400)) for mol in mols]
@@ -66,7 +69,7 @@ for i, (img, smi, csmi, dsmi) in enumerate(
 
     if "." in smi:
         st.warning("This is a mixture or contains adducts!!!!")
-    if smi != dsmi:
+    if csmi != dsmi:
         st.warning("This molecule was Charged!!!!")
         caption += f"\n\nDecharged: {dsmi}"
 
